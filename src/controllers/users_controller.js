@@ -2,14 +2,27 @@ const { v4: uuidv4 } = require("uuid");
 const catchAsyncError = require("../middlewares/catchAsyncError");
 const ErrorHandler = require("../utils/errorHandler");
 const { User, Role, User_Role } = require("../models");
+const _ = require("lodash");
+
+// exports.getAllUsers = catchAsyncError(async (req, res, next) => {
+//   // const { erp } = req.params;
+//   const { erp } = req.user;
+//   console.log(erp);
+//   // console.log(req.user.firstname);
+//   const users = await User.findAll({
+//     where: { erp },
+//     include: [Role],
+//   });
+
+//   res.status(200).json(users);
+// });
 
 exports.getAllUsers = catchAsyncError(async (req, res, next) => {
   // const { erp } = req.params;
-  const { erp } = req.user;
-  console.log(erp);
+  // const { erp } = req.user;
+  console.log(req.body);
   // console.log(req.user.firstname);
   const users = await User.findAll({
-    where: { erp },
     include: [Role],
   });
 
@@ -17,9 +30,10 @@ exports.getAllUsers = catchAsyncError(async (req, res, next) => {
 });
 
 exports.getSingleUser = catchAsyncError(async (req, res, next) => {
-  const roles = await User.findAll();
-
-  res.status(200).json(roles);
+  const { id } = req.params;
+  console.log(id);
+  const user = await User.findOne({ id: id });
+  res.status(200).json(user);
 });
 exports.deleteUser = catchAsyncError(async (req, res, next) => {
   const roles = await User.findAll();
@@ -27,9 +41,14 @@ exports.deleteUser = catchAsyncError(async (req, res, next) => {
   res.status(200).json(roles);
 });
 exports.updateUser = catchAsyncError(async (req, res, next) => {
-  const roles = await User.findAll();
-
-  res.status(200).json(roles);
+  const { id } = req.params;
+  // console.log(req.body);
+  const updated = await User.update(req.body, {
+    where: {
+      id: id,
+    },
+  });
+  res.status(200).json(updated);
 });
 
 exports.addProfileImage = catchAsyncError(async (req, res, next) => {

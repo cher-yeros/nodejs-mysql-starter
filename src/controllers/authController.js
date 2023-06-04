@@ -10,56 +10,6 @@ const { User, Role } = require("../models");
 const sendToken = require("../utils/sendToken");
 
 exports.loginUser = async (req, res, next) => {
-  const { username, password, erp } = req.body;
-
-  if (!username || !password || !erp) {
-    return next(new ErrorHandler("Please enter valid credential", 400));
-  }
-
-  const user = await User.findOne({
-    where: { erp, username },
-    include: [Role],
-    attributes: {
-      exclude: ["createdAt", "updatedAt"],
-    },
-  });
-
-  if (!user) {
-    return next(new ErrorHandler("Invalid Username or Password", 400));
-  }
-  const isPasswordMatched = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordMatched) {
-    return next(new ErrorHandler("Invalid Username or Password", 401));
-  }
-
-  const token = jwt.sign({ user }, process.env.JWT_SECRET);
-
-  sendToken(res, user, token);
-};
-
-exports.loginStep1 = async (req, res, next) => {
-  const { username } = req.body;
-
-  if (!username) {
-    return next(new ErrorHandler("Please enter valid username", 400));
-  }
-
-  const user = await User.findOne({
-    where: { username },
-  });
-
-  if (!user) {
-    return next(new ErrorHandler("Couldn't find your account!", 400));
-  }
-
-  res.status(200).json({
-    success: true,
-    user: { username: user.username, id: user.id, firstTime: user.firstTime },
-  });
-};
-
-exports.loginStep2 = async (req, res, next) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -75,13 +25,12 @@ exports.loginStep2 = async (req, res, next) => {
   });
 
   if (!user) {
-    return next(new ErrorHandler("Credential not found!", 400));
+    return next(new ErrorHandler("Invalid Username or Password", 400));
   }
-
   const isPasswordMatched = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatched) {
-    return next(new ErrorHandler("Invalid Password", 401));
+    return next(new ErrorHandler("Invalid Username or Password", 401));
   }
 
   const token = jwt.sign({ user }, process.env.JWT_SECRET);
@@ -169,9 +118,15 @@ exports.loggedUser = catchAsyncError(async (req, res, next) => {
 });
 
 exports.registerUser = catchAsyncError(async (req, res, next) => {
-  const { username, email, role, phone, password } = req.body;
+  const { username, email, role, phone, password, accountNo } = req.body;
 
   const emailFound = await User.findOne({
+    where: {
+      email,
+    },
+  });
+
+  const accountFound = await User.findOne({
     where: {
       email,
     },
@@ -193,20 +148,22 @@ exports.registerUser = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Username is already taken!", 400));
   if (emailFound) return next(new ErrorHandler("Email is already taken!", 400));
   if (phoneFound) return next(new ErrorHandler("Phone is already taken!", 400));
+  if (accountFound)
+    return next(new ErrorHandler("Account no is already taken!", 400));
 
   if (!role) {
     return next(new ErrorHandler("You must select role"));
   }
 
-  const userRole = await Role.findOne({ where: { key: role } });
+  const userRole = await Role.findOne({ where: { name: role } });
 
   if (!userRole) {
     return next(new ErrorHandler("Invalid role"));
   }
   const salt = await bcrypt.genSalt(10);
-  req.body.password = await bcrypt.hash("12345678", salt);
 
-  const cred = _.omit(req.body, ["confirmPassword", "role"]);
+  req.body.password = await bcrypt.hash(req.body.password, salt);
+
   try {
     const user = await User.create(
       _.omit(req.body, ["confirmPassword", "role"])

@@ -14,9 +14,14 @@ const { isAuthenticatedUser, onlyAdmin } = require("../middlewares/auth");
 const router = express.Router();
 
 router.post("/login", loginUser);
+// router.post("/login-step-1", loginStep1);
+// router.post("/login-step-2", loginStep2);
+router.post("/create-password", createPassword);
+router.post("/login", loginUser);
 router.get("/current-user", [isAuthenticatedUser], loggedUser);
-router.post("/register", [onlyAdmin], registerUser);
+router.post("/register", registerUser);
 router.post("/logout", logout);
 router.get("/roles/:erp", getAllRoles);
+router.post("/check-username", checkUsername);
 
 module.exports = router;

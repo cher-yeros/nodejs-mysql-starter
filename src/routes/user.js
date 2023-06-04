@@ -6,10 +6,14 @@ const {
   checkUsername,
 } = require("../controllers/authController");
 const { getAllRoles } = require("../controllers/roleController");
-const { addProfileImage } = require("../controllers/users_controller");
+const {
+  addProfileImage,
+  getAllUsers,
+} = require("../controllers/users_controller");
 const { isAuthenticatedUser } = require("../middlewares/auth");
 const router = express.Router();
 
-router.post("/avatar/:userId", addProfileImage);
+router.get("/getAllUsers", getAllUsers);
+// router.post("/avatar/:userId", addProfileImage);
 
 module.exports = router;

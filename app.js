@@ -41,9 +41,7 @@ app.get("/", (req, res, next) => {
 });
 
 // Import all routes
-app.use("/api/v1", require("./src/routes/auth"));
-app.use("/api/v1/admin", require("./src/routes/admin"));
-app.use("/api/v1/user", require("./src/routes/user"));
+app.use("/api", require("./src/routes/auth"));
 
 app.use(errorMiddleware);
 
